@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sasiru Physics Lab — 3D Virtual Laboratory</title>
+<style>
+:root {
+  --site-primary: #16c7d9;
+  --site-on-primary: #04191f;
+  --site-secondary: #172c49;
+  --site-on-secondary: #f4f8ff;
+  --site-background: #07111f;
+  --site-on-background: #edf5ff;
+  --site-font-body: Inter, "Noto Sans Sinhala", system-ui, sans-serif;
+  --site-font-heading: Inter, "Noto Sans Sinhala", system-ui, sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
+#app { min-height:100vh; width:100%; background-color: light-dark(#f3f7fb, var(--site-background)); color: light-dark(#122033, var(--site-on-background)); border-radius:0; }
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:18px clamp(16px,4vw,56px); border-bottom:1px solid #8ba7c326; background:var(--site-secondary); color:var(--site-on-secondary); gap:18px; }
+.brand { display:flex; align-items:center; gap:12px; font-weight:900; letter-spacing:.04em; }
+.logo { display:grid; place-items:center; width:42px;height:42px;border-radius:13px;background:var(--site-primary);color:var(--site-on-primary);font-size:23px;box-shadow:0 0 30px #16c7d933; }
+.topbar small { display:block; color:#a8c0d9; font-size:11px; letter-spacing:.18em; margin-top:3px; }
+.status { font-size:12px; border:1px solid #16c7d955; color:#8ef3f5; border-radius:999px; padding:8px 12px; white-space:nowrap; }
+.hero { padding: clamp(28px,5vw,68px) clamp(16px,4vw,56px) 32px; background: radial-gradient(ellipse at 80% 0%,#123c58 0%,transparent 43%), var(--site-background); color:var(--site-on-background); }
+.eyebrow { color:var(--site-primary); font-size:12px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; }
+h1 { font-family:var(--site-font-heading); font-size:calc(clamp(34px,6vw,68px) * var(--site-heading-scale)); line-height:1.03; max-width:850px; margin:15px 0; letter-spacing:-.045em; }
+.hero p { max-width:690px; color:#b4c7dc; line-height:1.7; font-size:15px; }
+.hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
+button, select, input { font:inherit; }
+button { cursor:pointer; border:0; border-radius:calc(12px * var(--site-radius-scale)); padding:12px 16px; font-weight:800; transition:transform .15s,filter .15s; }
+button:hover { transform:translateY(-1px); filter:brightness(1.08); }
+.primary { background:var(--site-primary); color:var(--site-on-primary); }
+.secondary { background:#1a2b40; color:#e9f3ff; border:1px solid #44617b; }
+.layout { display:grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,.8fr); gap:20px; padding:0 clamp(16px,4vw,56px) 44px; align-items:start; }
+.panel { border:1px solid #8ba7c326; background:light-dark(#ffffff,#0d1a2b); border-radius:calc(20px * var(--site-radius-scale)); overflow:hidden; box-shadow:0 16px 55px #00000015; }
+.panel-head { padding:18px 20px; display:flex; justify-content:space-between; gap:12px; align-items:center; border-bottom:1px solid #8ba7c326; }
+.panel-head h2 { margin:0; font-size:17px; }
+.panel-head span { font-size:11px; color:var(--site-primary); font-weight:800; letter-spacing:.13em; }
+.lab { padding:16px; }
+.canvas-wrap { position:relative; background:radial-gradient(ellipse at center,#142f49,#07111f 72%); border-radius:15px; overflow:hidden; min-height:350px; }
+canvas { width:100%; height:350px; display:block; touch-action:pan-y; }
+.canvas-label { position:absolute; top:12px;left:12px;background:#07111fcc;color:#b9d5e9;border:1px solid #8ba7c333;border-radius:8px;padding:7px 10px;font-size:11px;pointer-events:none; }
+.canvas-hint { position:absolute; bottom:12px;right:12px;color:#9cb7ce;font-size:10px;pointer-events:none; }
+.control-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px; }
+.control { background:light-dark(#f0f5f9,#111f31); padding:13px; border-radius:12px; }
+.control label { display:flex; justify-content:space-between; gap:8px; font-size:12px; font-weight:700; margin-bottom:10px; }
+.control output { color:var(--site-primary); font-variant-numeric:tabular-nums; }
+input[type=range] { width:100%; accent-color:var(--site-primary); }
+select { width:100%; padding:10px; border-radius:9px; border:1px solid #8ba7c344; background:light-dark(#fff,#0b1726); color:inherit; }
+.readouts { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+.readout { padding:13px; background:light-dark(#f0f5f9,#111f31); border-radius:12px; min-width:0; }
+.readout small { display:block; color:light-dark(#62748a,#8fa8c1); font-size:10px; margin-bottom:7px; }
+.readout strong { font-size:clamp(16px,2vw,22px); color:var(--site-primary); overflow-wrap:anywhere; }
+.right-stack { display:grid; gap:20px; }
+.experiment-list { padding:10px; display:grid; gap:7px; }
+.exp { text-align:left; display:flex; align-items:center; gap:12px; background:transparent; color:inherit; border:1px solid transparent; padding:12px; width:100%; }
+.exp.active { background:light-dark(#e8f7f9,#102b3b); border-color:#16c7d966; }
+.exp-icon { width:39px;height:39px;display:grid;place-items:center;border-radius:11px;background:#16c7d91a;color:var(--site-primary);font-size:19px;flex-shrink:0; }
+.exp b { display:block;font-size:13px; }
+.exp small { display:block;margin-top:4px;color:light-dark(#61758a,#8fa8c1);font-size:11px;font-weight:500; }
+.info { padding:18px 20px; }
+.info h3 { margin:0 0 8px; font-size:18px; }
+.info p, .info li { color:light-dark(#52667b,#a9bfd4);font-size:13px;line-height:1.65; }
+.info ul { padding-left:19px; }
+.formula { font-family:ui-monospace,monospace; background:light-dark(#edf3f7,#07111f); padding:12px; border-radius:10px; color:var(--site-primary); font-size:14px; overflow-wrap:anywhere; }
+.quiz { padding:18px 20px; }
+.quiz label { display:flex; gap:8px; margin:12px 0; font-size:13px; align-items:flex-start; }
+.quiz input { accent-color:var(--site-primary); margin-top:3px; }
+.feedback { min-height:22px;font-size:12px;color:var(--site-primary);margin-top:8px; }
+.footer { text-align:center;padding:24px 16px 30px;border-top:1px solid #8ba7c326;color:light-dark(#687b8e,#829bb4);font-size:12px; }
+.footer strong { color:var(--site-primary); letter-spacing:.04em; }
+@media(max-width:900px){.layout{grid-template-columns:1fr}.right-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.right-stack .panel:first-child{grid-row:span 2}}
+@media(max-width:600px){.right-stack{grid-template-columns:1fr}.right-stack .panel:first-child{grid-row:auto}.status{display:none}.control-grid{grid-template-columns:1fr 1fr}.readouts{grid-template-columns:1fr 1fr 1fr}.canvas-wrap,canvas{min-height:280px;height:280px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+  <div class="brand"><div class="logo">∿</div><div>SASIRU <small>PHYSICS LAB · 3D INTERACTIVE</small></div></div>
+  <div class="status">● VIRTUAL LAB READY</div>
+</header>
+<section class="hero">
+  <div class="eyebrow">A/L Physics · Learn by experimenting</div>
+  <h1>Physics is better<br><span style="color:var(--site-primary)">when you can see it.</span></h1>
+  <p>අ.පො.ස. උසස් පෙළ භෞතික විද්‍යාව — සංකල්ප තේරුම් ගන්න, පරාමිතීන් වෙනස් කරන්න, ප්‍රතිඵල නිරීක්ෂණය කරන්න. මෙම අන්තර්ක්‍රියාකාරී virtual lab එකේදී විවිධ practical අත්හදා බලන්න.</p>
+  <div class="hero-actions"><button class="primary" onclick="document.getElementById('labTitle').scrollIntoView({behavior:'smooth'})">▶ Start experimenting</button><button class="secondary" onclick="resetLab()">Reset experiment ↺</button></div>
+</section>
+<main class="layout" id="labTitle">
+  <section class="panel">
+    <div class="panel-head"><h2 id="expTitle">Projectile Motion</h2><span>LIVE SIMULATION</span></div>
+    <div class="lab">
+      <div class="canvas-wrap"><canvas id="scene" aria-label="Interactive physics experiment animation"></canvas><div class="canvas-label" id="sceneLabel">MOTION TRACK · SIDE VIEW</div><div class="canvas-hint">Animation · not to scale</div></div>
+      <div class="control-grid">
+        <div class="control"><label for="param1"><span id="label1">Initial speed</span><output id="value1">20 m/s</output></label><input id="param1" type="range" min="5" max="35" value="20" step="1"></div>
+        <div class="control"><label for="param2"><span id="label2">Launch angle</span><output id="value2">45°</output></label><input id="param2" type="range" min="10" max="80" value="45" step="1"></div>
+        <div class="control"><label for="param3"><span id="label3">Gravity</span><output id="value3">9.8 m/s²</output></label><input id="param3" type="range" min="2" max="20" value="9.8" step="0.1"></div>
+        <div class="control"><label for="experimentSelect"><span>Experiment</span></label><select id="experimentSelect">
+          <option value="projectile">Projectile motion</option><option value="pendulum">Simple pendulum</option><option value="spring">Mass-spring oscillator</option><option value="wave">Wave interference</option><option value="circuit">Ohm's law circuit</option><option value="lens">Convex lens</option><option value="energy">Energy conservation</option><option value="magnet">Magnetic field</option><option value="collision">Elastic collision</option><option value="centripetal">Circular motion</option>
+        </select></div>
+      </div>
+      <div class="readouts">
+        <div class="readout"><small id="metric1">MAX HEIGHT</small><strong id="out1">10.2 m</strong></div>
+        <div class="readout"><small id="metric2">RANGE</small><strong id="out2">40.8 m</strong></div>
+        <div class="readout"><small id="metric3">FLIGHT TIME</small><strong id="out3">2.88 s</strong></div>
+      </div>
+    </div>
+  </section>
+  <aside class="right-stack">
+    <section class="panel"><div class="panel-head"><h2>Experiment library</h2><span>10 MODULES</span></div><div class="experiment-list" id="experimentList">
+      <button class="exp active" data-exp="projectile"><span class="exp-icon">↗</span><span><b>Projectile motion</b><small>Range, height & time</small></span></button>
+      <button class="exp" data-exp="pendulum"><span class="exp-icon">◉</span><span><b>Simple pendulum</b><small>Period & length</small></span></button>
+      <button class="exp" data-exp="spring"><span class="exp-icon">〰</span><span><b>Mass-spring system</b><small>SHM & Hooke's law</small></span></button>
+      <button class="exp" data-exp="wave"><span class="exp-icon">∿</span><span><b>Wave interference</b><small>Amplitude & frequency</small></span></button>
+      <button class="exp" data-exp="circuit"><span class="exp-icon">ϟ</span><span><b>Ohm's law</b><small>Voltage, current, resistance</small></span></button>
+      <button class="exp" data-exp="lens"><span class="exp-icon">◐</span><span><b>Convex lens</b><small>Image formation</small></span></button>
+      <button class="exp" data-exp="energy"><span class="exp-icon">♧</span><span><b>Energy conservation</b><small>Potential ↔ kinetic</small></span></button>
+      <button class="exp" data-exp="magnet"><span class="exp-icon">⊙</span><span><b>Magnetic field</b><small>Field-line visualizer</small></span></button>
+      <button class="exp" data-exp="collision"><span class="exp-icon">●</span><span><b>Elastic collision</b><small>Momentum transfer</small></span></button>
+      <button class="exp" data-exp="centripetal"><span class="exp-icon">⟳</span><span><b>Circular motion</b><small>Angular speed & force</small></span></button>
+    </div></section>
+    <section class="panel"><div class="panel-head"><h2>Concept & formula</h2><span>QUICK GUIDE</span></div><div class="info"><h3 id="conceptTitle">Projectile motion</h3><p id="conceptText">A launched object follows a curved path when gravity is the only acceleration. Horizontal velocity stays constant in this ideal model.</p><div class="formula" id="formula">H = u² sin²θ / 2g</div><ul id="conceptList"><li>Horizontal and vertical motion are independent.</li><li>Air resistance is ignored.</li><li>At the highest point, vertical velocity is zero.</li></ul></div></section>
+    <section class="panel"><div class="panel-head"><h2>Quick check</h2><span>TEST YOURSELF</span></div><div class="quiz"><p id="quizQuestion" style="font-size:13px;line-height:1.6">At the highest point of a projectile, what is its vertical velocity?</p><div id="quizOptions"><label><input type="radio" name="quiz" value="a"> Equal to initial velocity</label><label><input type="radio" name="quiz" value="b"> Zero</label><label><input type="radio" name="quiz" value="c"> Increasing</label></div><button class="primary" id="checkQuiz">Check answer</button><div class="feedback" id="quizFeedback" aria-live="polite"></div></div></section>
+  </aside>
+</main>
+<footer class="footer">Built for learning · A/L Physics interactive demonstration<br><br><strong>Created by Sasiru Neksha Bandara</strong></footer>
+</div>
+<script>
+const canvas=document.getElementById('scene'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let current='projectile', anim=0, last=0, running=true;
+const configs={
+projectile:{title:'Projectile Motion',labels:['Initial speed','Launch angle','Gravity'],units:[' m/s','°',' m/s²'],defaults:[20,45,9.8],mins:[5,10,2],maxs:[35,80,20],steps:[1,1,.1],metrics:['MAX HEIGHT','RANGE','FLIGHT TIME'],concept:'A launched object follows a curved path when gravity is the only acceleration. Horizontal velocity stays constant in this ideal model.',formula:'H = u² sin²θ / 2g',points:['Horizontal and vertical motion are independent.','Air resistance is ignored.','At the highest point, vertical velocity is zero.'],quiz:'At the highest point of a projectile, what is its vertical velocity?',opts:['Equal to initial velocity','Zero','Increasing'],correct:1},
+pendulum:{title:'Simple Pendulum',labels:['Length','Initial angle','Gravity'],units:[' m','°',' m/s²'],defaults:[1,30,9.8],mins:[.2,5,2],maxs:[2.5,70,20],steps:[.1,1,.1],metrics:['TIME PERIOD','FREQUENCY','LENGTH'],concept:'For small oscillations, the period depends on pendulum length and gravitational acceleration, not on the bob mass.',formula:'T = 2π √(L/g)',points:['Use small angles for the simple formula.','Longer pendulum → longer period.','Frequency is the reciprocal of period.'],quiz:'If the pendulum length becomes four times larger, its period becomes…',opts:['Twice as large','Four times larger','Half as large'],correct:0},
+spring:{title:'Mass–Spring Oscillator',labels:['Mass','Spring constant','Amplitude'],units:[' kg',' N/m',' m'],defaults:[1,12,.25],mins:[.2,2,.05],maxs:[4,40,.5],steps:[.1,1,.01],metrics:['PERIOD','FREQUENCY','MAX SPEED'],concept:'A mass attached to a spring performs simple harmonic motion when the spring obeys Hooke’s law.',formula:'T = 2π √(m/k)',points:['Restoring force points toward equilibrium.','Ideal period is independent of amplitude.','Energy swaps between kinetic and elastic potential.'],quiz:'In ideal spring SHM, where is speed maximum?',opts:['At an extreme','At equilibrium','Everywhere equal'],correct:1},
+wave:{title:'Wave Interference',labels:['Frequency','Amplitude','Phase shift'],units:[' Hz',' cm','°'],defaults:[2,1,90],mins:[.5,.2,0],maxs:[5,2,360],steps:[.1,.1,5],metrics:['WAVELENGTH*','AMPLITUDE','PHASE'],concept:'When waves overlap, their displacements add. This superposition creates constructive or destructive interference.',formula:'y = y₁ + y₂',points:['In phase waves can reinforce.','Opposite phase waves can cancel.','*Wavelength shown for a fixed model wave speed.'],quiz:'Two equal waves 180° out of phase produce…',opts:['Maximum reinforcement','Complete cancellation','Double frequency'],correct:1},
+circuit:{title:"Ohm's Law Circuit",labels:['Voltage','Resistance','Wire length'],units:[' V',' Ω',' m'],defaults:[12,6,1],mins:[1,24,0.5],maxs:[24,24,5],steps:[1,1,.5],metrics:['CURRENT','POWER','VOLTAGE'],concept:'For an ohmic resistor at constant temperature, current is proportional to potential difference.',formula:'V = IR  ·  P = VI',points:['Current is measured in amperes.','Resistance is measured in ohms.','Real components may heat and deviate from the ideal model.'],quiz:'A 12 V supply across 6 Ω gives current of…',opts:['0.5 A','2 A','72 A'],correct:1},
+lens:{title:'Convex Lens',labels:['Object distance','Focal length','Object height'],units:[' cm',' cm',' cm'],defaults:[30,10,4],mins:[12,5,1],maxs:[60,20,8],steps:[1,1,1],metrics:['IMAGE DIST.','MAGNIFICATION','IMAGE TYPE'],concept:'A converging lens forms real or virtual images depending on object distance relative to focal length.',formula:'1/f = 1/u + 1/v',points:['Beyond 2f: real, inverted, reduced.','At 2f: same size, real and inverted.','Inside f: virtual, upright, magnified.'],quiz:'An object placed inside the focal length gives a…',opts:['Real inverted image','Virtual upright image','No image at all'],correct:1},
+energy:{title:'Energy Conservation',labels:['Mass','Height','Gravity'],units:[' kg',' m',' m/s²'],defaults:[2,5,9.8],mins:[.5,10,2],maxs:[5,10,20],steps:[.5,.5,.1],metrics:['POTENTIAL E.','SPEED AT GROUND','TOTAL ENERGY'],concept:'In an ideal system without energy losses, gravitational potential energy transforms into kinetic energy.',formula:'mgh = ½mv²',points:['Energy is measured in joules.','Speed at ground: v = √(2gh).','Friction transfers mechanical energy to thermal energy.'],quiz:'Ignoring losses, total mechanical energy is…',opts:['Always conserved','Always zero','Created at the bottom'],correct:0},
+magnet:{title:'Magnetic Field',labels:['Current','Coil turns','Radius'],units:[' A',' turns',' cm'],defaults:[2,20,5],mins:[.5,5,2],maxs:[5,50,12],steps:[.1,1,1],metrics:['FIELD INDEX','CURRENT','TURNS'],concept:'A current produces a magnetic field. In an ideal long solenoid, field strength grows with current and turn density.',formula:'B ≈ μ₀ n I',points:['Field lines form closed loops.','Outside a bar magnet, lines run north to south.','This is a qualitative visualization, not a calibrated field meter.'],quiz:'Increasing current in the same coil generally makes its field…',opts:['Weaker','Stronger','Unchanged always'],correct:1},
+collision:{title:'Elastic Collision',labels:['Mass 1','Velocity 1','Velocity 2'],units:[' kg',' m/s',' m/s'],defaults:[2,4,-1],mins:[.5,-8,-8],maxs:[5,8,8],steps:[.5,1,1],metrics:['FINAL V₁','FINAL V₂','MOMENTUM'],concept:'In a one-dimensional ideal elastic collision, both total momentum and total kinetic energy are conserved.',formula:'m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂',points:['Sign represents direction.','Momentum is a vector quantity.','Real collisions may lose kinetic energy to sound, heat or deformation.'],quiz:'In an ideal elastic collision, which quantities are conserved?',opts:['Momentum only','Kinetic energy only','Both momentum and kinetic energy'],correct:2},
+centripetal:{title:'Circular Motion',labels:['Speed','Radius','Mass'],units:[' m/s',' m',' kg'],defaults:[5,2,1],mins:[1,12,.5],maxs:[15,12,5],steps:[.5,.5,.5],metrics:['CENTRIPETAL a','CENTRIPETAL F','PERIOD'],concept:'An object moving in a circle has centripetal acceleration directed toward the centre, even at constant speed.',formula:'a = v²/r  ·  F = mv²/r',points:['Acceleration points inward.','Doubling speed quadruples centripetal acceleration.','A larger radius lowers acceleration at fixed speed.'],quiz:'If speed doubles while radius stays fixed, centripetal acceleration…',opts:['Doubles','Quadruples','Halves'],correct:1}
+};
+function val(i){return Number($('param'+i).value)}
+function setupControls(){
+ const c=configs[current];
+ c.labels.forEach((label,i)=>{$('label'+(i+1)).textContent=label;$('param'+(i+1)).min=c.mins[i];$('param'+(i+1)).max=c.maxs[i];$('param'+(i+1)).step=c.steps[i];$('param'+(i+1)).value=c.defaults[i];});
+ $('expTitle').textContent=c.title;$('conceptTitle').textContent=c.title;$('conceptText').textContent=c.concept;$('formula').textContent=c.formula;
+ $('conceptList').innerHTML=c.points.map(x=>'<li>'+x+'</li>').join('');
+ c.metrics.forEach((m,i)=>$('metric'+(i+1)).textContent=m);
+ $('quizQuestion').textContent=c.quiz;
+ $('quizOptions').innerHTML=c.opts.map((o,i)=>`<label><input type="radio" name="quiz" value="${i}"> ${o}</label>`).join('');
+ $('quizFeedback').textContent='';
+ document.querySelectorAll('.exp').forEach(b=>b.classList.toggle('active',b.dataset.exp===current));
+ update();
+}
+function update(){
+ const c=configs[current],v=[val(1),val(2),val(3)];
+ v.forEach((x,i)=>$('value'+(i+1)).textContent=Number(x.toFixed(2))+c.units[i]);
+ let outs=[];
+ if(current==='projectile'){let a=v[1]*Math.PI/180,t=2*v[0]*Math.sin(a)/v[2];outs=[(v[0]**2*Math.sin(a)**2/(2*v[2])).toFixed(2)+' m',(v[0]**2*Math.sin(2*a)/v[2]).toFixed(2)+' m',t.toFixed(2)+' s'];}
+ if(current==='pendulum'){let T=2*Math.PI*Math.sqrt(v[0]/v[2]);outs=[T.toFixed(2)+' s',(1/T).toFixed(2)+' Hz',v[0].toFixed(2)+' m'];}
+ if(current==='spring'){let T=2*Math.PI*Math.sqrt(v[0]/v[1]);outs=[T.toFixed(2)+' s',(1/T).toFixed(2)+' Hz',(2*Math.PI/T*v[2]).toFixed(2)+' m/s'];}
+ if(current==='wave'){outs=[(340/v[0]).toFixed(1)+' m', (v[1]*Math.abs(2*Math.cos(v[2]*Math.PI/360))).toFixed(2)+' cm',v[2]+'°'];}
+ if(current==='circuit'){outs=[(v[0]/v[1]).toFixed(2)+' A',(v[0]**2/v[1]).toFixed(1)+' W',v[0]+' V'];}
+ if(current==='lens'){let image=v[0]===v[1]?'∞':(v[1]*v[0]/(v[0]-v[1])).toFixed(1);outs=[image+' cm',(v[0]/(v[0]-v[1])).toFixed(2)+'×',v[0]>v[1]?'Real':'Virtual'];}
+ if(current==='energy'){outs=[(v[0]*v[1]*v[2]).toFixed(1)+' J',Math.sqrt(2*v[1]*v[2]).toFixed(2)+' m/s',(v[0]*v[1]*v[2]).toFixed(1)+' J'];}
+ if(current==='magnet'){outs=[(v[0]*v[1]/(v[2]/100)).toFixed(0)+' index',v[0]+' A',v[1]+' turns'];}
+ if(current==='collision'){let m1=v[0],m2=2,u1=v[1],u2=v[2];outs=[((m1-m2)/(m1+m2)*u1+2*m2/(m1+m2)*u2).toFixed(2)+' m/s',(2*m1/(m1+m2)*u1+(m2-m1)/(m1+m2)*u2).toFixed(2)+' m/s',(m1*u1+m2*u2).toFixed(2)+' kg·m/s'];}
+ if(current==='centripetal'){outs=[(v[0]**2/v[1]).toFixed(2)+' m/s²',(v[2]*v[0]**2/v[1]).toFixed(2)+' N',(2*Math.PI*v[1]/v[0]).toFixed(2)+' s'];}
+ outs.forEach((o,i)=>$('out'+(i+1)).textContent=o);
+}
+function resetLab(){setupControls();anim=0;}
+function resize(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));ctx.setTransform(d,0,0,d,0,0);}
+function line(x1,y1,x2,y2,color='#31516c',w=1){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function dot(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+function draw(){
+ const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;
+ ctx.clearRect(0,0,w,h);
+ const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,'#102b43');grad.addColorStop(1,'#07111f');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+ for(let x=0;x<w;x+=30)line(x,0,x,h,'#29445a30');for(let y=0;y<h;y+=30)line(0,y,w,y,'#29445a30');
+ const v=[val(1),val(2),val(3)],cx=w*.5,cy=h*.5;
+ if(current==='projectile'){
+  let u=v[0],a=v[1]*Math.PI/180,g=v[2],T=2*u*Math.sin(a)/g,R=u*Math.cos(a)*T,H=u*u*Math.sin(a)**2/(2*g),scale=Math.min((w*.78)/Math.max(R,1),(h*.58)/Math.max(H,1)),base=h*.78,ox=w*.1;
+  line(ox,base, w*.92,base,'#7a9db6',2);
+  ctx.strokeStyle='#16c7d9';ctx.lineWidth=2;ctx.beginPath();
+  for(let i=0;i<=100;i++){let t=T*i/100,x=ox+u*Math.cos(a)*t*scale,y=base-(u*Math.sin(a)*t-.5*g*t*t)*scale;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke();
+  let t=(anim%4)/4*T,x=ox+u*Math.cos(a)*t*scale,y=base-(u*Math.sin(a)*t-.5*g*t*t)*scale;
+  dot(x,y,7,'#e6ffff');dot(x,y,12,'#16c7d955');
+  ctx.fillStyle='#a9c8df';ctx.font='11px system-ui';ctx.fillText('R = '+R.toFixed(1)+' m',ox+R*scale*.65,base+20);ctx.fillText('H = '+H.toFixed(1)+' m',ox+4,base-H*scale-10);
+ } else if(current==='pendulum'){
+  let L=v[0],T=2*Math.PI*Math.sqrt(L/v[2]),ang=(v[1]*Math.PI/180)*Math.sin(anim*2*Math.PI/T),len=Math.min(h*.42,150),px=cx+Math.sin(ang)*len,py=cy-len*Math.cos(ang);
+  line(cx,cy-len-25,cx,cy+len+20,'#28455c');line(cx-65,cy-len,cx+65,cy-len,'#6e8da7',3);line(cx,cy-len,px,py,'#16c7d9',3);dot(cx,cy-len,5,'#d6efff');dot(px,py,14,'#16c7d9');dot(px-4,py-4,4,'#d9ffff');
+  ctx.fillStyle='#c2d8e9';ctx.font='12px system-ui';ctx.fillText('L = '+L+' m',cx+12,cy-len/2);
+ } else if(current==='spring'){
+  let mass=v[0],k=v[1],A=v[2],omega=Math.sqrt(k/mass),x=A*Math.cos(anim*omega)*Math.min(w*.7/(2*A),120),top=cy-100;
+  line(cx-100,top,cx+100,top,'#6d8ba4',3);ctx.beginPath();ctx.moveTo(cx,top);for(let i=0;i<22;i++){ctx.lineTo(cx+(i%2?14:-14),top+10+i*5)}ctx.lineTo(cx+x,cy+35);ctx.strokeStyle='#16c7d9';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#1b7691';ctx.fillRect(cx+x-24,cy+35,48,42);ctx.strokeStyle='#5ee7f1';ctx.strokeRect(cx+x-24,cy+35,48,42);line(cx-130,cy+100,cx+130,cy+100,'#4c6881');
+ } else if(current==='wave'){
+  let amp=v[1]*45,f=v[0],phase=v[2]*Math.PI/180;
+  for(let j=0;j<2;j++){ctx.beginPath();for(let x=0;x<w;x+=2){let y=cy+(j===0?-1:1)*amp*Math.sin(x*.035*f+anim*2+(j?phase:0));x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=j?'#f3b45f':'#16c7d9';ctx.lineWidth=2;ctx.stroke()}
+  ctx.fillStyle='#c2d8e9';ctx.font='12px system-ui';ctx.fillText('Blue: wave 1 · Gold: wave 2',14,24);
+ } else if(current==='circuit'){
+  let left=w*.22,right=w*.78,top=h*.3,bot=h*.72;
+  ctx.strokeStyle='#16c7d9';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(right,top);ctx.lineTo(right,bot);ctx.lineTo(left,bot);ctx.closePath();ctx.stroke();
+  line(left,top-18,left,top+18,'#f4c16b',4);line(left+10,top-10,left+10,top+10,'#f4c16b',2);
+  ctx.fillStyle='#162d44';ctx.fillRect(cx-27,top-13,54,26);ctx.strokeStyle='#f4c16b';ctx.strokeRect(cx-27,top-13,54,26);ctx.fillStyle='#dffaff';ctx.font='13px system-ui';ctx.fillText(v[1]+' Ω',cx-17,top+5);ctx.fillStyle='#c2d8e9';ctx.fillText(v[0]+' V',left-10,top-30);ctx.fillText('I = '+(v[0]/v[1]).toFixed(2)+' A',cx-42,bot+24);
+  for(let i=0;i<6;i++)dot(left+((anim*35+i*45)%(right-left)),top,3,'#f8e7a0');
+ } else if(current==='lens'){
+  let axis=cy, lens=cx, f=Math.min(w*.15,v[1]*4),objX=lens-Math.min(w*.32,v[0]*3),objH=45;
+  line(12,axis,w-12,axis,'#7192aa',1.5);ctx.strokeStyle='#16c7d9';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(lens,axis-85);ctx.quadraticCurveTo(lens+25,axis,lens,axis+85);ctx.quadraticCurveTo(lens-25,axis,lens,axis-85);ctx.stroke();
+  line(objX,axis,objX,axis-objH,'#f4b95e',3);dot(objX,axis-objH,4,'#f4b95e');
+  let f1=lens-f,f2=lens+f;line(f1,axis-6,f1,axis+6,'#d6eaff');line(f2,axis-6,f2,axis+6,'#d6eaff');
+  ctx.fillStyle='#d6eaff';ctx.font='11px system-ui';ctx.fillText('F',f1-4,axis+20);ctx.fillText('F',f2-4,axis+20);
+  let u=Math.max(1,(lens-objX)/f),vimg=u===1?1000:(lens-objX)/(u-1),ix=lens+Math.min(w*.35,vimg*f);line(objX,axis-objH,lens,axis,'#f4b95e',1.5);line(lens,axis-objH,lens,axis,'#16c7d9',1.5);line(lens,axis,ix,axis+(ix-lens)*objH/Math.max(1,lens-objX),'#16c7d9',1.5);
+ } else if(current==='energy'){
+  let ground=h*.82, trackL=w*.12, trackR=w*.88, maxH=h*.58,phase=(anim%4)/4,yy=maxH*(1-Math.cos(phase*Math.PI*2))/2,xx=trackL+(trackR-trackL)*phase;
+  ctx.beginPath();ctx.moveTo(trackL,ground-maxH);ctx.bezierCurveTo(w*.25,ground-maxH,w*.35,ground,w*.5,ground);ctx.bezierCurveTo(w*.7,ground,w*.7,ground-maxH,w*.88,ground-maxH);ctx.strokeStyle='#52748e';ctx.lineWidth=4;ctx.stroke();dot(xx,ground-maxH+yy,10,'#16c7d9');
+  ctx.fillStyle='#c4d9e9';ctx.font='12px system-ui';ctx.fillText('PE ↔ KE',w*.44,25);ctx.fillStyle='#16c7d9';ctx.fillRect(w*.12,h*.1,w*.35,8);ctx.fillStyle='#f4b95e';ctx.fillRect(w*.47,h*.1,w*.35,8);
+ } else if(current==='magnet'){
+  let bx=cx,by=cy,rad=Math.min(w,h)*.18;
+  ctx.save();ctx.translate(bx,by);ctx.rotate(.12*Math.sin(anim));ctx.fillStyle='#d6535b';ctx.fillRect(-rad,-18,rad,36);ctx.fillStyle='#3b83d2';ctx.fillRect(0,-18,rad,36);ctx.fillStyle='white';ctx.font='bold 14px system-ui';ctx.fillText('N',-rad*.65,5);ctx.fillText('S',rad*.35,5);ctx.restore();
+  for(let i=0;i<6;i++){let rr=rad+18+i*13;ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*.63,0,Math.PI,Math.PI*2);ctx.strokeStyle='#16c7d966';ctx.lineWidth=1.5;ctx.stroke();ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*.63,0,0,Math.PI);ctx.stroke();}
+ } else if(current==='collision'){
+  let x1=w*.25+Math.sin(anim*1.3)*w*.12,x2=w*.75-Math.sin(anim*1.3)*w*.12,r1=10+v[0]*3,r2=23;
+  line(20,cy+35,w-20,cy+35,'#526f87',2);dot(x1,cy,r1,'#16c7d9');dot(x2,cy,r2,'#f4b95e');ctx.fillStyle='#d7eafa';ctx.font='12px system-ui';ctx.fillText('m₁ = '+v[0]+' kg',x1-28,cy-30);ctx.fillText('m₂ = 2 kg',x2-32,cy-35);ctx.fillStyle='#9db8ce';ctx.fillText('Momentum conserved in ideal elastic collision',14,h-17);
+ } else if(current==='centripetal'){
+  let r=Math.min(w,h)*.29,ang=anim*1.3,x=cx+r*Math.cos(ang),y=cy+r*Math.sin(ang);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#16c7d9';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.stroke();ctx.setLineDash([]);line(x,y,cx,cy,'#f4b95e',2);dot(cx,cy,4,'#d6eaff');dot(x,y,12,'#16c7d9');ctx.fillStyle='#f4b95e';ctx.font='12px system-ui';ctx.fillText('aᶜ →',cx+r*.18,cy+r*.12);
+ }
+}
+function frame(ts){if(!last)last=ts;let dt=Math.min((ts-last)/1000,.05);last=ts;if(running)anim+=dt;draw();requestAnimationFrame(frame)}
+document.querySelectorAll('.exp').forEach(b=>b.addEventListener('click',()=>{current=b.dataset.exp;$('experimentSelect').value=current;setupControls();resize()}));
+$('experimentSelect').addEventListener('change',e=>{current=e.target.value;setupControls();resize()});
+[1,2,3].forEach(i=>$('param'+i).addEventListener('input',update));
+$('checkQuiz').addEventListener('click',()=>{let chosen=document.querySelector('input[name="quiz"]:checked');$('quizFeedback').textContent=!chosen?'Choose an answer first.':Number(chosen.value)===configs[current].correct?'✓ Correct! Nice work.':'Not quite — review the concept and try again.';$('quizFeedback').style.color=chosen&&Number(chosen.value)===configs[current].correct?'#16c7a7':'#f4b95e'});
+window.addEventListener('resize',resize);
+setupControls();resize();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
